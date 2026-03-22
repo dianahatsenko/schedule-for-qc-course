@@ -2,34 +2,38 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: bug
+labels: bug, test-design
 assignees: dianahatsenko
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+Title: Короткий опис проблеми
+Labels: bug
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
+## Опис
+Детальний опис того, що відбувається.
 
-**Actual behavior**
-A clear and concise description of what you expected to happen.
+## Кроки відтворення
+1. Перший крок
+2. Другий крок
+3. Третій крок
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Очікуваний результат
+Що мало статися.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+## Фактичний результат
+Що сталося насправді.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+## Severity
+[Critical / Major / Minor / Trivial]
 
+## Priority
+[High / Medium / Low]
 
-**Additional context**
-Add any other context about the problem here.
+## Середовище
+- Браузер: ...
+- ОС: ...
+- Розширення екрану: ...
+
+## Додатково
+[Скріншот або відео]
