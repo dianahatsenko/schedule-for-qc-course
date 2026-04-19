@@ -16,6 +16,7 @@ import com.softserve.mapper.StudentMapper;
 import com.softserve.repository.StudentRepository;
 import com.softserve.service.impl.StudentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,10 +39,10 @@ import java.util.stream.Stream;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -100,7 +101,6 @@ class StudentServiceTest {
         studentDTOWithId2L.setSurname("Surname");
         studentDTOWithId2L.setPatronymic("Patronymic");
         studentDTOWithId2L.setEmail(null);
-
     }
 
     @Test
@@ -395,4 +395,196 @@ class StudentServiceTest {
         verify(studentRepository).getExistingStudent(student1);
         verify(studentRepository).getExistingStudent(student3);
     }
+
+    @Nested
+    class SaveStudentDTOTests {
+
+        @Test
+        void save_HappyPath_WhenSocialUserNotFound_ShouldAutoRegisterAndSave() {
+            User newUser = new User();
+            newUser.setId(99L);
+            newUser.setEmail("aware.123db@gmail.com");
+            newUser.setRole(Role.ROLE_STUDENT);
+
+            Group group = new Group();
+            group.setId(3L);
+            group.setTitle("Test");
+
+            Student studentMapped = new Student();
+            studentMapped.setId(null);
+            studentMapped.setName("Name");
+            studentMapped.setSurname("Surname");
+            studentMapped.setPatronymic("Patronymic");
+            studentMapped.setUser(newUser);
+            studentMapped.setGroup(group);
+
+            Student savedStudent = new Student();
+            savedStudent.setId(10L);
+            savedStudent.setName("Name");
+            savedStudent.setSurname("Surname");
+            savedStudent.setPatronymic("Patronymic");
+            savedStudent.setUser(newUser);
+            savedStudent.setGroup(group);
+
+            StudentDTO input = studentDTOWithId1L;
+
+            when(studentMapper.studentDTOToStudent(input)).thenReturn(studentMapped);
+            when(userService.findSocialUser(input.getEmail())).thenReturn(Optional.empty());
+            //when(studentRepository.isEmailInUse(input.getEmail())).thenReturn(false);
+            when(userService.automaticRegistration(input.getEmail(), Role.ROLE_STUDENT)).thenReturn(newUser);
+            when(studentRepository.save(any(Student.class))).thenReturn(savedStudent);
+
+            Student actual = studentService.save(input);
+
+            assertThat(actual).isNotNull();
+            assertThat(actual.getId()).isEqualTo(10L);
+            assertThat(actual.getUser()).isEqualTo(newUser);
+            verify(userService).findSocialUser(input.getEmail());
+            verify(userService).automaticRegistration(input.getEmail(), Role.ROLE_STUDENT);
+            verify(studentRepository).save(any(Student.class));
+        }
+
+        @Test
+        void save_WhenEmailAlreadyInUse_ShouldNotCallRepositorySave() {
+            User existingUser = new User();
+            existingUser.setId(5L);
+            existingUser.setEmail("aware.123db@gmail.com");
+            existingUser.setRole(Role.ROLE_STUDENT);
+
+            Group group = new Group();
+            group.setId(3L);
+
+            Student studentMapped = new Student();
+            studentMapped.setUser(existingUser);
+            studentMapped.setGroup(group);
+
+            StudentDTO input = studentDTOWithId1L;
+
+            when(studentMapper.studentDTOToStudent(input)).thenReturn(studentMapped);
+            when(userService.findSocialUser(input.getEmail())).thenReturn(Optional.of(existingUser));
+            when(studentRepository.isEmailInUse(input.getEmail())).thenReturn(true);
+
+            assertThrows(FieldAlreadyExistsException.class, () -> studentService.save(input));
+
+            verify(studentRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    class UpdateStudentDTOTests {
+
+        @Test
+        void update_HappyPath_WhenEmailBelongsToSameStudent_ShouldUpdateSuccessfully() {
+            Long studentId = 1L;
+
+            User user = new User();
+            user.setId(1L);
+            user.setEmail("aware.123db@gmail.com");
+            user.setRole(Role.ROLE_STUDENT);
+
+            Group group = new Group();
+            group.setId(3L);
+            group.setTitle("Test");
+
+            Student studentMapped = new Student();
+            studentMapped.setId(studentId);
+            studentMapped.setName("Name");
+            studentMapped.setSurname("Surname");
+            studentMapped.setPatronymic("Patronymic");
+            studentMapped.setUser(user);
+            studentMapped.setGroup(group);
+
+            Student updatedStudent = new Student();
+            updatedStudent.setId(studentId);
+            updatedStudent.setName("Name Updated");
+            updatedStudent.setSurname("Surname");
+            updatedStudent.setPatronymic("Patronymic");
+            updatedStudent.setUser(user);
+            updatedStudent.setGroup(group);
+
+            GroupDTO groupDTO = new GroupDTO();
+            groupDTO.setId(3L);
+            groupDTO.setTitle("Test");
+
+            StudentDTO input = new StudentDTO();
+            input.setId(studentId);
+            input.setName("Name Updated");
+            input.setSurname("Surname");
+            input.setPatronymic("Patronymic");
+            input.setEmail("aware.123db@gmail.com");
+            input.setGroup(groupDTO);
+
+            when(studentMapper.studentDTOToStudent(input)).thenReturn(studentMapped);
+            when(studentRepository.isIdPresent(studentId)).thenReturn(true);
+            // findSocialUser повертає present → перевіряємо isEmailForThisStudent
+            when(userService.findSocialUser(input.getEmail())).thenReturn(Optional.of(user));
+            when(studentRepository.isEmailForThisStudent(input.getEmail(), studentId)).thenReturn(true);
+            when(studentRepository.update(studentMapped)).thenReturn(updatedStudent);
+
+            Student actual = studentService.update(input);
+
+            assertThat(actual).isNotNull();
+            assertThat(actual.getId()).isEqualTo(studentId);
+            assertThat(actual.getName()).isEqualTo("Name Updated");
+            verify(studentRepository).isIdPresent(studentId);
+            verify(studentRepository).isEmailForThisStudent(input.getEmail(), studentId);
+            verify(studentRepository).update(studentMapped);
+        }
+
+        @Test
+        void update_WhenSocialUserNotFound_ShouldAutoRegisterAndUpdate() {
+            Long studentId = 1L;
+
+            User newUser = new User();
+            newUser.setId(77L);
+            newUser.setEmail("aware.123db@gmail.com");
+            newUser.setRole(Role.ROLE_STUDENT);
+
+            Group group = new Group();
+            group.setId(3L);
+
+            Student studentMapped = new Student();
+            studentMapped.setId(studentId);
+            studentMapped.setName("Name");
+            studentMapped.setSurname("Surname");
+            studentMapped.setPatronymic("Patronymic");
+            studentMapped.setUser(newUser);
+            studentMapped.setGroup(group);
+
+            Student updatedStudent = new Student();
+            updatedStudent.setId(studentId);
+            updatedStudent.setName("Name");
+            updatedStudent.setSurname("Surname");
+            updatedStudent.setPatronymic("Patronymic");
+            updatedStudent.setUser(newUser);
+            updatedStudent.setGroup(group);
+
+            GroupDTO groupDTO = new GroupDTO();
+            groupDTO.setId(3L);
+
+            StudentDTO input = new StudentDTO();
+            input.setId(studentId);
+            input.setName("Name");
+            input.setSurname("Surname");
+            input.setPatronymic("Patronymic");
+            input.setEmail("aware.123db@gmail.com");
+            input.setGroup(groupDTO);
+
+            when(studentMapper.studentDTOToStudent(input)).thenReturn(studentMapped);
+            when(studentRepository.isIdPresent(studentId)).thenReturn(true);
+            // findSocialUser повертає empty → сервіс викликає automaticRegistration і update
+            when(userService.findSocialUser(input.getEmail())).thenReturn(Optional.empty());
+            when(userService.automaticRegistration(input.getEmail(), Role.ROLE_STUDENT)).thenReturn(newUser);
+            when(studentRepository.update(studentMapped)).thenReturn(updatedStudent);
+
+            Student actual = studentService.update(input);
+
+            assertThat(actual).isNotNull();
+            assertThat(actual.getUser()).isEqualTo(newUser);
+            verify(userService).automaticRegistration(input.getEmail(), Role.ROLE_STUDENT);
+            verify(studentRepository).update(studentMapped);
+            verify(studentRepository, never()).isEmailForThisStudent(anyString(), anyLong());
+        }
+    }
 }
+
