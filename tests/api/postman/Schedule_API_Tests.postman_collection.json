@@ -1,0 +1,976 @@
+{
+  "info": {
+    "_postman_id": "86cccd8a-4034-4c71-930a-c5072f38bdac",
+    "name": "Schedule API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54470611",
+    "_collection_link": "https://go.postman.co/collection/54470611-86cccd8a-4034-4c71-930a-c5072f38bdac?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Class",
+      "item": [
+        {
+          "name": "GET all",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response is an array\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.be.an('array');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Each item has required fields\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    if (json.length > 0) {\r",
+                  "        pm.expect(json[0]).to.have.property('id');\r",
+                  "        pm.expect(json[0]).to.have.property('class_name');\r",
+                  "        pm.expect(json[0]).to.have.property('startTime');\r",
+                  "        pm.expect(json[0]).to.have.property('endTime');\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/classes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET class by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Returns correct resource by path variable id\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    const expectedId = parseInt(pm.environment.get(\"classId\"));\r",
+                  "    pm.expect(json.id).to.eql(expectedId);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Resource has class_name field\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.have.property('class_name');\r",
+                  "    pm.expect(json).to.have.property('startTime');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/classes/{{classId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes",
+                "{{classId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST class",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response contains created resource with correct class_name\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.have.property('id');\r",
+                  "    pm.expect(json.class_name).to.eql(pm.environment.get(\"className\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response has startTime and endTime objects\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.have.property('startTime');\r",
+                  "    pm.expect(json).to.have.property('endTime');\r",
+                  "    pm.expect(json.startTime).to.have.property('hour');\r",
+                  "});\r",
+                  "\r",
+                  "// Зберігаємо ID для наступних запитів\r",
+                  "if (pm.response.code === 200) {\r",
+                  "    pm.environment.set(\"classId\", pm.response.json().id);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "pm.environment.set(\"className\", \"TestClass_\" + timestamp);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"startTime\": \"14:50\",\r\n    \"endTime\": \"16:10\",\r\n    \"class_name\": \"{{className}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/classes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update class",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "pm.environment.set(\"classNameUpdated\", \"UpdatedClass_\" + timestamp);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Data updated correctly\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json.class_name).to.eql(pm.environment.get(\"classNameUpdated\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Id remains the same\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json.id).to.eql(parseInt(pm.environment.get(\"classId\")));\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": {{classId}},\r\n    \"startTime\": \"08:20\",\r\n    \"endTime\": \"09:40\",\r\n    \"class_name\": \"{{classNameUpdated}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/classes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE class",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 500 (FK constraint)\", () => {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 500]);\r",
+                  "});\r",
+                  "\r",
+                  "if (pm.response.code === 200) {\r",
+                  "    pm.test(\"Response contains message\", () => {\r",
+                  "        const json = pm.response.json();\r",
+                  "        pm.expect(json).to.have.property('message');\r",
+                  "    });\r",
+                  "}\r",
+                  "\r",
+                  "if (pm.response.code === 500) {\r",
+                  "    pm.test(\"Error indicates foreign key constraint\", () => {\r",
+                  "        const json = pm.response.json();\r",
+                  "        pm.expect(json.message).to.contain(\"constraint\");\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "packages": {},
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/classes/:classId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes",
+                ":classId"
+              ],
+              "variable": [
+                {
+                  "key": "classId",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Non-existing class",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", () => {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response does not contain valid class data\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.not.have.property('class_name');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/classes/:classId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes",
+                ":classId"
+              ],
+              "variable": [
+                {
+                  "key": "classId",
+                  "value": "999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Class Invalid",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400, 422 or 500\", () => {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 422, 500]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response indicates error\", () => {\r",
+                  "    pm.expect(pm.response.code).to.not.be.oneOf([200, 201]);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"startTime\": null,\r\n    \"endTime\": null,\r\n    \"class_name\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/classes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "classes"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Lesson",
+      "item": [
+        {
+          "name": "GET all",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response is an array of Lessons\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.be.an('array');\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Each item has required fields (id, subject, teacher, group)\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    if (json.length > 0) {\r",
+                  "        pm.expect(json[0]).to.have.property('id');\r",
+                  "        pm.expect(json[0]).to.have.property('lessonType');\r",
+                  "        pm.expect(json[0]).to.have.property('subject');\r",
+                  "        pm.expect(json[0]).to.have.property('teacher');\r",
+                  "        pm.expect(json[0]).to.have.property('group');\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/lessons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lessons"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET lesson by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Returns correct lesson by path id\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json.id).to.eql(parseInt(pm.environment.get(\"lessonId\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Has subject, teacher and group objects\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.have.property('subject');\r",
+                  "    pm.expect(json).to.have.property('teacher');\r",
+                  "    pm.expect(json).to.have.property('group');\r",
+                  "    pm.expect(json.subject).to.have.property('id');\r",
+                  "    pm.expect(json.teacher).to.have.property('name');\r",
+                  "    pm.expect(json.group).to.have.property('title');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "packages": {},
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/lessons/{{lessonId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lessons",
+                "{{lessonId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create new lesson",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "pm.environment.set(\"lessonSubjectForSite\", \"LessonSubject_\" + timestamp);\r",
+                  "pm.environment.set(\"lessonLink\", \"https://meet.example.com/\" + timestamp);\r",
+                  "\r",
+                  "['subjectId', 'teacherId', 'groupId', 'semesterId'].forEach(v => {\r",
+                  "    if (!pm.environment.get(v)) {\r",
+                  "        pm.expect.fail(v + \" is empty! Run setup requests first.\");\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response is array with created lessons\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.be.an('array');\r",
+                  "    pm.expect(json.length).to.be.above(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"First lesson has correct subjectForSite\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json[0].subjectForSite).to.eql(pm.environment.get(\"lessonSubjectForSite\"));\r",
+                  "});\r",
+                  "\r",
+                  "if (pm.response.code === 201) {\r",
+                  "    const json = pm.response.json();\r",
+                  "    if (json.length > 0 && json[0].id) {\r",
+                  "        pm.environment.set(\"lessonId\", json[0].id);\r",
+                  "    }\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"hours\": 2,\r\n    \"linkToMeeting\": \"{{lessonLink}}\",\r\n    \"subjectForSite\": \"{{lessonSubjectForSite}}\",\r\n    \"lessonType\": \"LECTURE\",\r\n    \"subject\": {\r\n        \"id\": {{subjectId}},\r\n        \"name\": \"{{subjectName}}\",\r\n        \"disable\": {{subjectDisable}}\r\n    },\r\n    \"teacher\": {\r\n        \"id\": {{teacherId}},\r\n        \"name\": \"{{teacherName}}\",\r\n        \"surname\": \"{{teacherSurname}}\",\r\n        \"patronymic\": \"{{teacherPatronymic}}\"\r\n    },\r\n    \"semesterId\": {{semesterId}},\r\n    \"groups\": [\r\n        {\r\n            \"id\": {{groupId}},\r\n            \"disable\": {{groupDisable}},\r\n            \"title\": \"{{groupTitle}}\"\r\n        }\r\n    ],\r\n    \"grouped\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lessons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lessons"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Update lesson",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();\r",
+                  "pm.environment.set(\"lessonSubjectUpdated\", \"UpdatedLesson_\" + timestamp);\r",
+                  "\r",
+                  "if (!pm.environment.get(\"lessonId\")) {\r",
+                  "    pm.expect.fail(\"lessonId is empty! Run POST Create Lesson first.\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Lesson updated correctly\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json.subjectForSite).to.eql(pm.environment.get(\"lessonSubjectUpdated\"));\r",
+                  "    pm.expect(json.lessonType).to.eql(\"PRACTICAL\");\r",
+                  "    pm.expect(json.hours).to.eql(3);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Id remains the same\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json.id).to.eql(parseInt(pm.environment.get(\"lessonId\")));\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": {{lessonId}},\r\n    \"hours\": 3,\r\n    \"linkToMeeting\": \"https://meet.example.com/updated\",\r\n    \"subjectForSite\": \"{{lessonSubjectUpdated}}\",\r\n    \"lessonType\": \"PRACTICAL\",\r\n    \"subject\": {\r\n        \"id\": {{subjectId}},\r\n        \"name\": \"{{subjectName}}\",\r\n        \"disable\": {{subjectDisable}}\r\n    },\r\n    \"teacher\": {\r\n        \"id\": {{teacherId}},\r\n        \"name\": \"{{teacherName}}\",\r\n        \"surname\": \"{{teacherSurname}}\",\r\n        \"patronymic\": \"{{teacherPatronymic}}\"\r\n    },\r\n    \"semesterId\": {{semesterId}},\r\n    \"group\": {\r\n        \"id\": {{groupId}},\r\n        \"disable\": {{groupDisable}},\r\n        \"title\": \"{{groupTitle}}\"\r\n    },\r\n    \"grouped\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/lessons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lessons"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response time is less than 500ms\", () => {\r",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/lessons/{{lessonId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lessons",
+                "{{lessonId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET non-existing lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", () => {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response does not contain valid lesson data\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.not.have.property('lessonType');\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/lessons/:lessonId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lessons",
+                ":lessonId"
+              ],
+              "variable": [
+                {
+                  "key": "lessonId",
+                  "value": "999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Lesson Types",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response contains valid lesson types\", () => {\r",
+                  "    const json = pm.response.json();\r",
+                  "    pm.expect(json).to.be.an('array');\r",
+                  "    pm.expect(json).to.include.oneOf([\"LECTURE\", \"LABORATORY\", \"PRACTICAL\"]);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/lessons/types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lessons",
+                "types"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Additional Tests",
+      "item": [
+        {
+          "name": "Setup Teacher for POST Lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response is array of Teachers\", () => {\r",
+                  "    \r",
+                  "    pm.expect(json).to.be.an('array');\r",
+                  "});\r",
+                  "\r",
+                  "if (json.length > 0) {\r",
+                  "    pm.environment.set(\"teacherId\", json[0].id);\r",
+                  "    pm.environment.set(\"teacherName\", json[0].name);\r",
+                  "    pm.environment.set(\"teacherSurname\", json[0].surname);\r",
+                  "    pm.environment.set(\"teacherPatronymic\", json[0].patronymic);\r",
+                  "    } else {\r",
+                  "        pm.test(\"No teachers found\", () => {\r",
+                  "            pm.expect(json.length).to.be.above(0);\r",
+                  "        })\r",
+                  "        }\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/teachers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "teachers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Setup Subject for POST Lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response is array of Subjects\", () => {\r",
+                  "    \r",
+                  "    pm.expect(json).to.be.an('array');\r",
+                  "});\r",
+                  "\r",
+                  "if (json.length > 0) {\r",
+                  "        pm.environment.set(\"subjectId\", json[0].id);\r",
+                  "        pm.environment.set(\"subjectName\", json[0].name);\r",
+                  "        pm.environment.set(\"subjectDisable\", json[0].disable);\r",
+                  "\r",
+                  "    } else {\r",
+                  "        pm.test(\"No subjects found\", () => {\r",
+                  "            pm.expect(json.length).to.be.above(0);\r",
+                  "        })\r",
+                  "        }\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subjects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subjects"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Setup Semester and Group for POST Lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", () => {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Response is array of Semesters\", () => {\r",
+                  "    \r",
+                  "    pm.expect(json).to.be.an('array');\r",
+                  "});\r",
+                  "\r",
+                  "if (json.length > 0 && json[0].semester_classes.length > 0) {\r",
+                  "    pm.environment.set(\"semesterId\", json[0].id);\r",
+                  "    pm.environment.set(\"groupId\", json[0].semester_groups[0].id);\r",
+                  "    pm.environment.set(\"groupDisable\", json[0].semester_groups[0].disable);\r",
+                  "    pm.environment.set(\"groupTitle\", json[0].semester_groups[0].title);\r",
+                  "    } else {\r",
+                  "        pm.test(\"No Semesters or Groups found\", () => {\r",
+                  "            pm.expect(json.length).to.be.above(0);\r",
+                  "            pm.expect(json[0].semester_classes.length).to.be.above(0);\r",
+                  "        })\r",
+                  "        }\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/semesters",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "semesters"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "Bearer_{{token}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "Authorization",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
