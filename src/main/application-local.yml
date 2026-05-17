@@ -31,10 +31,10 @@ spring:
             client-id: your-facebook-client-id
             client-secret: your-facebook-client-secret
 
-  #  data:
-  #    mongodb:
-  #      uri: ${MONGO_URI}
-  #      database: ${MONGO_DB}
+#  data:
+#    mongodb:
+#      uri: ${MONGO_URI}
+#      database: ${MONGO_DB}
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
