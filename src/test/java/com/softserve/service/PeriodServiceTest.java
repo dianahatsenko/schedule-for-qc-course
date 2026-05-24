@@ -83,7 +83,7 @@ class PeriodServiceTest {
 
         assertThrows(EntityNotFoundException.class, () -> periodService.getById(2L));
 
-        verify(periodRepository, times(2)).findById(2L);
+        verify(periodRepository, times(1)).findById(2L);
     }
 
     @Test

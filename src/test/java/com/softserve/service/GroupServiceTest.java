@@ -11,6 +11,7 @@ import com.softserve.repository.GroupRepository;
 import com.softserve.repository.SortOrderRepository;
 import com.softserve.service.impl.GroupServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,12 +24,14 @@ import java.util.*;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
+
     @Mock
     private GroupRepository groupRepository;
 
@@ -414,5 +417,140 @@ class GroupServiceTest {
         verify(groupRepository).isExistsByTitleIgnoringId(groupToUpdate.getTitle(), groupToUpdate.getId());
         verify(groupRepository, never()).update(any());
         verify(sortOrderRepository, never()).getSortOrderById(any());
+    }
+    @Nested
+    class IsExistsByIdTests {
+
+        @Test
+        void isExistsById_WhenGroupNotFound_ShouldReturnFalse() {
+            Long id = 999L;
+            when(groupRepository.isExistsById(id)).thenReturn(false);
+
+            boolean actual = groupService.isExistsById(id);
+
+            assertThat(actual).isFalse();
+            verify(groupRepository).isExistsById(id);
+        }
+
+        @Test
+        void isExistsById_WhenGroupExists_ShouldReturnTrue() {
+            Long id = 1L;
+            when(groupRepository.isExistsById(id)).thenReturn(true);
+
+            boolean actual = groupService.isExistsById(id);
+
+            assertThat(actual).isTrue();
+            verify(groupRepository).isExistsById(id);
+        }
+    }
+
+    @Nested
+    class EmptyResultTests {
+
+        @Test
+        void getAll_WhenNoGroupsExist_ShouldReturnEmptyList() {
+            when(groupRepository.getAll()).thenReturn(Collections.emptyList());
+            when(groupMapper.groupsToGroupDTOs(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            List<GroupDTO> actual = groupService.getAll();
+
+            assertThat(actual).isEmpty();
+            verify(groupRepository).getAll();
+            verify(groupMapper).groupsToGroupDTOs(Collections.emptyList());
+        }
+
+        @Test
+        void getDisabled_WhenNoDisabledGroupsExist_ShouldReturnEmptyList() {
+            when(groupRepository.getDisabled()).thenReturn(Collections.emptyList());
+            when(groupMapper.groupsToGroupDTOs(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            List<GroupDTO> actual = groupService.getDisabled();
+
+            assertThat(actual).isEmpty();
+            verify(groupRepository).getDisabled();
+            verify(groupMapper).groupsToGroupDTOs(Collections.emptyList());
+        }
+
+        @Test
+        void getByTeacherId_WhenNoGroupsForTeacher_ShouldReturnEmptyList() {
+            Long teacherId = 42L;
+            when(groupRepository.getByTeacherId(teacherId)).thenReturn(Collections.emptyList());
+            when(groupMapper.groupsToGroupDTOs(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            List<GroupDTO> actual = groupService.getByTeacherId(teacherId);
+
+            assertThat(actual).isEmpty();
+            verify(groupRepository).getByTeacherId(teacherId);
+            verify(groupMapper).groupsToGroupDTOs(Collections.emptyList());
+        }
+    }
+
+    @Nested
+    class GetWithStudentsByIdTests {
+
+        @Test
+        void getWithStudentsById_WhenStudentsListIsNull_ShouldNotCallStudentMapper() {
+            group.setStudents(null);
+
+            GroupWithStudentsDTO mappedGroup = new GroupWithStudentsDTO();
+            mappedGroup.setId(group.getId());
+            mappedGroup.setTitle(group.getTitle());
+
+            when(groupRepository.getWithStudentsById(group.getId())).thenReturn(Optional.of(group));
+            when(groupMapper.groupToGroupWithStudentsDTO(group)).thenReturn(mappedGroup);
+
+            GroupWithStudentsDTO actual = groupService.getWithStudentsById(group.getId());
+
+            assertThat(actual.getId()).isEqualTo(group.getId());
+            assertThat(actual.getTitle()).isEqualTo(group.getTitle());
+            verify(groupRepository).getWithStudentsById(group.getId());
+            verify(groupMapper).groupToGroupWithStudentsDTO(group);
+            verify(studentMapper, never()).studentToStudentWithoutGroupDTO(any());
+        }
+
+        @Test
+        void getWithStudentsById_WhenStudentsListIsEmpty_ShouldReturnDTOWithEmptyStudents() {
+            group.setStudents(Collections.emptyList());
+
+            GroupWithStudentsDTO mappedGroup = new GroupWithStudentsDTO();
+            mappedGroup.setId(group.getId());
+            mappedGroup.setTitle(group.getTitle());
+            mappedGroup.setStudents(Collections.emptyList());
+
+            when(groupRepository.getWithStudentsById(group.getId())).thenReturn(Optional.of(group));
+            when(groupMapper.groupToGroupWithStudentsDTO(group)).thenReturn(mappedGroup);
+
+            GroupWithStudentsDTO actual = groupService.getWithStudentsById(group.getId());
+
+            assertThat(actual.getStudents()).isEmpty();
+            verify(groupRepository).getWithStudentsById(group.getId());
+            verify(studentMapper, never()).studentToStudentWithoutGroupDTO(any());
+        }
+    }
+
+    @Nested
+    class SaveGroupTests {
+
+        @Test
+        void save_WhenTitleAlreadyExists_ShouldNotCallRepositorySave() {
+            when(groupMapper.groupDTOToGroup(groupDTO)).thenReturn(group);
+            when(groupRepository.isExistsByTitle(group.getTitle())).thenReturn(true);
+
+            assertThrows(FieldAlreadyExistsException.class, () -> groupService.save(groupDTO));
+
+            verify(groupRepository, never()).save(any());
+        }
+
+        @Test
+        void save_WhenTitleIsUnique_ShouldCallRepositorySaveExactlyOnce() {
+            when(groupMapper.groupDTOToGroup(groupDTO)).thenReturn(group);
+            when(groupRepository.isExistsByTitle(group.getTitle())).thenReturn(false);
+            when(groupRepository.save(group)).thenReturn(group);
+            when(groupMapper.groupToGroupDTO(group)).thenReturn(groupDTO);
+
+            groupService.save(groupDTO);
+
+            verify(groupRepository, times(1)).save(group);
+        }
     }
 }

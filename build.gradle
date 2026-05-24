@@ -174,8 +174,8 @@ dependencies {
 
 
 pitest {
-    targetClasses = ['com.softserve.service.*']
-    targetTests = ['com.softserve.service.*Test']
+    targetClasses = ['com.softserve.service.*', 'com.softserve.util.*']
+    targetTests = ['com.softserve.service.*Test', 'com.softserve.util.*Test']
     junit5PluginVersion = '1.2.1'
     outputFormats = ['HTML']
     timestampedReports = false
